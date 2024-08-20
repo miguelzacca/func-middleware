@@ -1,0 +1,24 @@
+{
+  "name": "func-middleware",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "keywords": [
+    "middleware",
+    "function",
+    "function middleware",
+    "func",
+    "middle",
+    "custom"
+  ],
+  "author": "Miguel Zacca",
+  "license": "MIT",
+  "description": "A customized middleware for your functions. performs an action before the main function",
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}
