@@ -13,7 +13,7 @@ npm i func-middleware
 **Pre-execution:**
 
 ```js
-import middleware from 'func-middleware'
+import { middleware } from 'func-middleware'
 
 const action = () => {
   console.log('Hello, world!')
@@ -37,7 +37,7 @@ Hello, wordl!
 **Execution blocking (return false):**
 
 ```js
-import middleware from 'func-middleware'
+import { middleware } from 'func-middleware'
 
 const action = () => {
   if (/** blocking conditional */) {
@@ -62,7 +62,7 @@ undefined
 **Parameter interception:**
 
 ```js
-import middleware from 'func-middleware'
+import { middleware } from 'func-middleware'
 import { User } from './userEntity.ts'
 
 const createUserDTO = (data: User) => {
