@@ -1,13 +1,27 @@
 export const middleware = <
   T extends (...args: any[]) => any,
-  A extends (...args: Parameters<T>) => void | boolean,
+  A extends (
+    ...args: Parameters<T>
+  ) => Promise<boolean | void> | boolean | void,
 >(
-  fn: T,
+  func: T,
   action: A,
-): T => {
+) => {
   return ((...args: Parameters<T>) => {
-    if (action(...args) !== false) {
-      return fn(...args)
+    const actionResult = action(...args)
+
+    function handleBlockAction(result: boolean | void) {
+      if (result !== false) {
+        return func(...args)
+      }
     }
-  }) as T
+
+    if (actionResult instanceof Promise) {
+      return actionResult.then((res) => handleBlockAction(res))
+    }
+
+    return handleBlockAction(actionResult)
+  }) as ReturnType<A> extends Promise<any>
+    ? (...args: Parameters<T>) => Promise<ReturnType<T>>
+    : T
 }

@@ -1,14 +1,14 @@
-## func-middleware
+# func-middleware
 
-A customized middleware for your functions. performs an action before the main function
+A customized middleware for your functions. performs an action before the main function.
 
-### Install
+## Install
 
 ```bash
 npm i func-middleware
 ```
 
-### Example
+## Example
 
 **Pre-execution:**
 
@@ -86,3 +86,7 @@ Output:
 ```txt
 User { uname: 'jones', age: 21 }
 ```
+
+### Promise
+
+The `action` can be a promise, in which case the return type of the main function will be changed to a promise.
