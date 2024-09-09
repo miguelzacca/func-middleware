@@ -34,14 +34,14 @@ Hello, wordl!
 4
 ```
 
-**Execution blocking (return false):**
+**Execution blocking (return false or block result):**
 
 ```js
 import { middleware } from 'func-middleware'
 
 const action = () => {
   if (/** blocking conditional */) {
-    return false
+    return false // false or any other value
   }
 }
 

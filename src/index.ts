@@ -1,8 +1,6 @@
 export const middleware = <
   T extends (...args: any[]) => any,
-  A extends (
-    ...args: Parameters<T>
-  ) => Promise<boolean | void> | boolean | void,
+  A extends (...args: Parameters<T>) => any,
 >(
   func: T,
   action: A,
@@ -10,10 +8,11 @@ export const middleware = <
   return ((...args: Parameters<T>) => {
     const actionResult = action(...args)
 
-    const handleBlockAction = (actionResult: boolean | void) => {
-      if (actionResult !== false) {
+    const handleBlockAction = (actionResult: ReturnType<A>) => {
+      if (actionResult !== false && !actionResult) {
         return func(...args)
       }
+      return actionResult ? actionResult : undefined
     }
 
     const handlePromiseFunc = (
