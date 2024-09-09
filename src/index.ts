@@ -10,18 +10,29 @@ export const middleware = <
   return ((...args: Parameters<T>) => {
     const actionResult = action(...args)
 
-    function handleBlockAction(result: boolean | void) {
-      if (result !== false) {
+    const handleBlockAction = (actionResult: boolean | void) => {
+      if (actionResult !== false) {
         return func(...args)
       }
     }
 
-    if (actionResult instanceof Promise) {
-      return actionResult.then((res) => handleBlockAction(res))
+    const handlePromiseFunc = (
+      funcResult: ReturnType<T> | Promise<ReturnType<T>>,
+    ) => {
+      if (Promise.resolve(funcResult) === funcResult) {
+        return Promise.resolve(funcResult)
+      }
+      return funcResult
     }
 
-    return handleBlockAction(actionResult)
+    if (actionResult instanceof Promise) {
+      const funcResult = actionResult.then(handleBlockAction)
+      return handlePromiseFunc(funcResult)
+    }
+
+    const funcResult = handleBlockAction(actionResult)
+    return handlePromiseFunc(funcResult)
   }) as ReturnType<A> extends Promise<any>
-    ? (...args: Parameters<T>) => Promise<ReturnType<T>>
+    ? (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>
     : T
 }
