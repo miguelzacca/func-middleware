@@ -1,6 +1,6 @@
 {
   "name": "func-middleware",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "main": "lib/index.js",
   "type": "module",
   "scripts": {
@@ -13,11 +13,15 @@
     "function middleware",
     "func",
     "middle",
-    "custom"
+    "custom",
+    "interceptor",
+    "result",
+    "function intercepter",
+    "filter"
   ],
   "author": "Miguel Zacca",
   "license": "MIT",
-  "description": "A customized middleware for your functions. performs an action before the main function",
+  "description": "A custom middleware and interceptor for your functions. performs an action before the main function or after.",
   "devDependencies": {
     "@types/node": "^22.5.4",
     "tsx": "^4.19.0",
