@@ -8,7 +8,7 @@ A customized middleware for your functions. performs an action before the main f
 npm i func-middleware
 ```
 
-## Example
+### Example
 
 **Pre-execution:**
 
@@ -19,7 +19,7 @@ const action = () => {
   console.log('Hello, world!')
 }
 
-const sum = middleware((num1, num2) => {
+const sum = middleware((num1: number, num2: number) => {
   return num1 + num2
 }, action)
 
@@ -45,7 +45,7 @@ const action = () => {
   }
 }
 
-const sum = middleware((num1, num2) => {
+const sum = middleware((num1: number, num2: number) => {
   return num1 + num2
 }, action)
 
@@ -90,3 +90,51 @@ User { uname: 'jones', age: 21 }
 ### Promise
 
 The `action` can be a promise, in which case the return type of the main function will be changed to a promise.
+
+## Interceptor
+
+The interceptor allows you to modify or interact with the result of a function after it has been executed.
+
+### Example
+
+**Case 1:**
+
+```js
+import { interceptor } from 'func-middleware'
+
+const action = (result: number) => {
+  return result * 2
+}
+
+const sum = interceptor((num1: number, num2: number) => {
+  return num1 + num2
+}, action)
+
+const result = sum(10, 10)
+console.log(result)
+```
+
+Output:
+
+```txt
+40
+```
+
+**Case 2:**
+
+```js
+import { interceptor } from 'func-middleware'
+
+const action = (result: number) => {
+  if (result > 10) {
+    throw new Error('Result should be lt 10')
+  }
+}
+
+const sum = interceptor((num1: number, num2: number) => {
+  return num1 + num2
+}, action)
+
+const result = sum(10, 10) // Error: Result should be lt 10
+console.log(result)
+```
