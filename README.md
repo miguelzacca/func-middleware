@@ -93,7 +93,7 @@ The `action` can be a promise, in which case the return type of the main functio
 
 ## Interceptor
 
-The interceptor allows you to modify or interact with the result of a function after it has been executed.
+The interceptor allows you to modify or interact with the result of a function after it has been executed. Receiving as parameters the result of the function and its parameters.
 
 ### Example
 
@@ -137,4 +137,31 @@ const sum = interceptor((num1: number, num2: number) => {
 
 const result = sum(10, 10) // Error: Result should be lt 10
 console.log(result)
+```
+
+**Case 3:**
+
+```js
+import { interceptor } from 'func-middleware'
+
+const test = (result: number, num1: number, num2: number) => {
+  if (result - (num1 + num2) === 0) {
+    console.log('Success')
+  }
+  console.log('Error')
+}
+
+const sum = interceptor((num1: number, num2: number) => {
+  return num1 + num2
+}, test)
+
+const result = sum(10, 10)
+console.log(result)
+```
+
+Output:
+
+```txt
+Success
+20
 ```

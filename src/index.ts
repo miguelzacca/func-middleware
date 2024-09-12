@@ -38,7 +38,7 @@ export const middleware = <
 
 export const interceptor = <
   T extends (...args: any[]) => any,
-  A extends (result: Awaited<ReturnType<T>>) => any,
+  A extends (result: Awaited<ReturnType<T>>, ...args: Parameters<T>) => any,
 >(
   func: T,
   action: A,
@@ -47,7 +47,7 @@ export const interceptor = <
     const funcResult = func(...args)
 
     const handlePromiseAction = (funcResult: Awaited<ReturnType<T>>) => {
-      const actionResult = action(funcResult)
+      const actionResult = action(funcResult, ...args)
       if (actionResult instanceof Promise) {
         return Promise.resolve(actionResult) ?? funcResult
       }
