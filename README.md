@@ -1,6 +1,6 @@
 # func-middleware
 
-A customized middleware for your functions. performs an action before the main function.
+A custom middleware and interceptor for your functions. performs an action before the main function or after.
 
 ## Install
 
