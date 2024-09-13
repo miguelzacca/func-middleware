@@ -87,6 +87,32 @@ Output:
 User { uname: 'jones', age: 21 }
 ```
 
+**Parameter validation: (return the new parameter array)**
+
+Obs: The new parameter array must be compatible with the function parameters, so if there are two parameters you must return both parameters in the array, even if not modified.
+
+```js
+import { middleware } from 'func-middleware'
+
+const toLowerCase = (name1: string, name2: string) => {
+  return [name1.toLowerCase(), name2]
+}
+
+const printNames = middleware((name1: string, name2: string) => {
+  console.log(name1)
+  console.log(name2)
+}, toLowerCase)
+
+printNames('JOHN', 'JONES')
+```
+
+Output:
+
+```txt
+john
+JONES
+```
+
 ### Promise
 
 The `action` can be a promise, in which case the return type of the main function will be changed to a promise.
