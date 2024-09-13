@@ -1,6 +1,6 @@
 {
   "name": "func-middleware",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "main": "lib/index.js",
   "type": "module",
   "scripts": {
