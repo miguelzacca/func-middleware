@@ -191,3 +191,45 @@ Output:
 Success
 20
 ```
+
+## Capsule
+
+The capsule is the combination of middleware and interceptor.
+
+### Example
+
+**API:**
+
+```js
+capsule(func, [middlewareAction, interceptorAction])
+```
+
+**Case 1:**
+
+```js
+import { capsule } from 'func-middleware'
+
+const sum = (num1: number, num2: number) => {
+  return num1 + num2
+}
+
+const sumCapsule = capsule(sum, [
+  (num1, num2) => {
+    // Middleware action
+    console.log(num1, num2)
+  },
+  (res, num1, num2) => {
+    // Interceptor action
+    console.log(res, num1, num2)
+  },
+])
+
+sumCapule(2, 2)
+```
+
+Output:
+
+```txt
+2 2
+4 2 2
+```
