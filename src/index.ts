@@ -14,7 +14,7 @@ type PromiseComp<T extends Func> = (
 const handlePromiseFunc = <T extends Func>(
   funcResult: ReturnType<T>,
 ): Promise<ReturnType<T>> | ReturnType<T> => {
-  if (funcResult.then) {
+  if (Promise.resolve(funcResult) === funcResult) {
     return Promise.resolve(funcResult)
   }
   return funcResult
