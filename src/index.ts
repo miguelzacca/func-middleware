@@ -18,10 +18,11 @@ const processInterceptor = <T extends Func, A extends InterceptorAction<T>>(
 ) => {
   const funcResult = func(...args)
   const actionResult = action(funcResult, ...args)
-  if (actionResult instanceof Promise) {
-    return Promise.resolve(actionResult).then((res) => res ?? funcResult)
+  const result = actionResult ?? funcResult
+  if (funcResult instanceof Promise) {
+    return Promise.resolve(result)
   }
-  return actionResult ?? funcResult
+  return result
 }
 
 const processAction = <
