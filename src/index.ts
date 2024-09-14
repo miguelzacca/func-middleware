@@ -14,13 +14,13 @@ type PromiseComp<T extends Func> = (
 const handlePromiseFunc = <T extends Func>(
   funcResult: ReturnType<T>,
 ): Promise<ReturnType<T>> | ReturnType<T> => {
-  if (Promise.resolve(funcResult) === funcResult) {
+  if (funcResult.then) {
     return Promise.resolve(funcResult)
   }
   return funcResult
 }
 
-const processInterceptor = <T extends Func, A extends Func>(
+const processInterceptor = <T extends Func, A extends InterceptorAction<T>>(
   action: A,
   args: Parameters<T>,
   func: T,
@@ -28,12 +28,16 @@ const processInterceptor = <T extends Func, A extends Func>(
   const funcResult = func(...args)
   const actionResult = action(funcResult, ...args)
   if (actionResult instanceof Promise) {
-    return Promise.resolve(actionResult) ?? funcResult
+    return Promise.resolve(actionResult).then((res) => res ?? funcResult)
   }
   return actionResult ?? funcResult
 }
 
-const processAction = <T extends Func, M extends Func, I extends Func>(
+const processAction = <
+  T extends Func,
+  M extends MiddlewareAction<T>,
+  I extends InterceptorAction<T>,
+>(
   middlewareAction: M,
   args: Parameters<T>,
   func: T,
@@ -42,23 +46,22 @@ const processAction = <T extends Func, M extends Func, I extends Func>(
   const actionResult = middlewareAction(...args)
 
   const handleResultAction = (actionResult: ReturnType<M>) => {
-    const isParameters = (arr: any[]): arr is Parameters<T> => {
+    const isCompatibleArgs = (arr: any[]): arr is Parameters<T> => {
       return (
         arr.length === func.length &&
         arr.every((arg, i) => typeof arg === typeof args[i])
       )
     }
 
-    const isArray = Array.isArray(actionResult)
+    const isArgs = Array.isArray(actionResult) && isCompatibleArgs(actionResult)
     const isFalse = actionResult === false
 
-    if (!isFalse && (isArray || !actionResult)) {
-      const endArgs =
-        isArray && isParameters(actionResult) ? actionResult : args
+    if (!isFalse && (isArgs || !actionResult)) {
+      const newArgs = isArgs ? actionResult : args
 
       return interceptorAction
-        ? processInterceptor(interceptorAction, endArgs, func)
-        : func(...endArgs)
+        ? processInterceptor(interceptorAction, newArgs, func)
+        : func(...newArgs)
     }
 
     return isFalse ? undefined : actionResult
