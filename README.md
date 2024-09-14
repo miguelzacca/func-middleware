@@ -8,6 +8,14 @@ A custom middleware and interceptor for your functions. performs an action befor
 npm i func-middleware
 ```
 
+## API
+
+#### - `middleware(func, action)`
+
+#### - `interceptor(func, action)`
+
+#### - `capsule(func, [middlewareAction, interceptorAction])`
+
 ### Example
 
 **Pre-execution:**
@@ -197,12 +205,6 @@ Success
 The capsule is the combination of middleware and interceptor.
 
 ### Example
-
-**API:**
-
-```js
-capsule(func, [middlewareAction, interceptorAction])
-```
 
 **Case 1:**
 
