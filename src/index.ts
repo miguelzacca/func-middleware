@@ -16,13 +16,21 @@ const processInterceptor = <T extends Func, A extends InterceptorAction<T>>(
   args: Parameters<T>,
   func: T,
 ) => {
+  const handlePromiseFunc = (result: any) => {
+    if (funcResult instanceof Promise) {
+      return Promise.resolve(result)
+    }
+    return result
+  }
   const funcResult = func(...args)
   const actionResult = action(funcResult, ...args)
-  const result = actionResult ?? funcResult
-  if (funcResult instanceof Promise) {
-    return Promise.resolve(result)
-  }
-  return result
+
+  const result =
+    actionResult instanceof Promise
+      ? actionResult.then((res) => res ?? funcResult)
+      : actionResult ?? funcResult
+
+  return handlePromiseFunc(result)
 }
 
 const processAction = <
