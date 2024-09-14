@@ -1,79 +1,110 @@
-export const middleware = <
-  T extends (...args: any[]) => any,
-  A extends (...args: Parameters<T>) => any,
->(
-  func: T,
-  action: A,
-) => {
-  return ((...args: Parameters<T>) => {
-    const actionResult = action(...args)
+type Func = (...args: any[]) => any
 
-    const handleResultAction = (actionResult: ReturnType<A>) => {
-      const isParameters = (arr: any[]): arr is Parameters<T> => {
-        return (
-          arr.length === func.length &&
-          arr.every((arg, i) => typeof arg === typeof args[i])
-        )
-      }
+type MiddlewareAction<T extends Func> = (...args: Parameters<T>) => any
 
-      const isArray = Array.isArray(actionResult)
-      const isFalse = actionResult === false
+type InterceptorAction<T extends Func> = (
+  result: Awaited<ReturnType<T>>,
+  ...args: Parameters<T>
+) => any
 
-      if (!isFalse && (isArray || !actionResult)) {
-        const parameters =
-          isArray && isParameters(actionResult) ? actionResult : args
+type PromiseComp<T extends Func> = (
+  ...args: Parameters<T>
+) => Promise<Awaited<ReturnType<T>>>
 
-        return func(...parameters)
-      }
-
-      return isFalse ? undefined : actionResult
-    }
-
-    const handlePromiseFunc = (
-      funcResult: ReturnType<T> | Promise<ReturnType<T>>,
-    ) => {
-      if (Promise.resolve(funcResult) === funcResult) {
-        return Promise.resolve(funcResult)
-      }
-      return funcResult
-    }
-
-    if (actionResult instanceof Promise) {
-      const funcResult = actionResult.then(handleResultAction)
-      return handlePromiseFunc(funcResult)
-    }
-
-    const funcResult = handleResultAction(actionResult)
-    return handlePromiseFunc(funcResult)
-  }) as ReturnType<A> extends Promise<any>
-    ? (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>
-    : T
+const handlePromiseFunc = <T extends Func>(
+  funcResult: ReturnType<T>,
+): Promise<ReturnType<T>> | ReturnType<T> => {
+  if (Promise.resolve(funcResult) === funcResult) {
+    return Promise.resolve(funcResult)
+  }
+  return funcResult
 }
 
-export const interceptor = <
-  T extends (...args: any[]) => any,
-  A extends (result: Awaited<ReturnType<T>>, ...args: Parameters<T>) => any,
->(
+const processInterceptor = <T extends Func, A extends Func>(
+  action: A,
+  args: Parameters<T>,
+  func: T,
+) => {
+  const funcResult = func(...args)
+  const actionResult = action(funcResult, ...args)
+  if (actionResult instanceof Promise) {
+    return Promise.resolve(actionResult) ?? funcResult
+  }
+  return actionResult ?? funcResult
+}
+
+const processAction = <T extends Func, M extends Func, I extends Func>(
+  middlewareAction: M,
+  args: Parameters<T>,
+  func: T,
+  interceptorAction?: I,
+) => {
+  const actionResult = middlewareAction(...args)
+
+  const handleResultAction = (actionResult: ReturnType<M>) => {
+    const isParameters = (arr: any[]): arr is Parameters<T> => {
+      return (
+        arr.length === func.length &&
+        arr.every((arg, i) => typeof arg === typeof args[i])
+      )
+    }
+
+    const isArray = Array.isArray(actionResult)
+    const isFalse = actionResult === false
+
+    if (!isFalse && (isArray || !actionResult)) {
+      const endArgs =
+        isArray && isParameters(actionResult) ? actionResult : args
+
+      return interceptorAction
+        ? processInterceptor(interceptorAction, endArgs, func)
+        : func(...endArgs)
+    }
+
+    return isFalse ? undefined : actionResult
+  }
+
+  if (actionResult instanceof Promise) {
+    return actionResult.then(handleResultAction)
+  }
+
+  return handleResultAction(actionResult)
+}
+
+export const middleware = <T extends Func, A extends MiddlewareAction<T>>(
   func: T,
   action: A,
 ) => {
   return ((...args: Parameters<T>) => {
-    const funcResult = func(...args)
+    const funcResult = processAction(action, args, func)
+    return handlePromiseFunc(funcResult)
+  }) as ReturnType<A> extends Promise<any> ? PromiseComp<T> : T
+}
 
-    const handlePromiseAction = (funcResult: Awaited<ReturnType<T>>) => {
-      const actionResult = action(funcResult, ...args)
-      if (actionResult instanceof Promise) {
-        return Promise.resolve(actionResult) ?? funcResult
-      }
-      return actionResult ?? funcResult
-    }
+export const interceptor = <T extends Func, A extends InterceptorAction<T>>(
+  func: T,
+  action: A,
+) => {
+  return ((...args: Parameters<T>) => {
+    const funcResult = processInterceptor(action, args, func)
+    return handlePromiseFunc(funcResult)
+  }) as ReturnType<A> extends Promise<any> ? PromiseComp<T> : T
+}
 
-    if (funcResult instanceof Promise) {
-      return funcResult.then(handlePromiseAction)
-    }
-
-    return handlePromiseAction(funcResult)
-  }) as ReturnType<A> extends Promise<any>
-    ? (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>>
+export const capsule = <
+  T extends Func,
+  M extends MiddlewareAction<T>,
+  I extends InterceptorAction<T>,
+>(
+  func: T,
+  actions: [M, I],
+) => {
+  return ((...args: Parameters<T>) => {
+    const funcResult = processAction(actions[0], args, func, actions[1])
+    return handlePromiseFunc(funcResult)
+  }) as ReturnType<M> extends Promise<any>
+    ? PromiseComp<T>
+    : ReturnType<I> extends Promise<any>
+    ? PromiseComp<T>
     : T
 }
