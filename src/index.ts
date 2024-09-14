@@ -100,10 +100,15 @@ export const capsule = <
   I extends InterceptorAction<T>,
 >(
   func: T,
-  actions: [M, I],
+  [middlewareAction, interceptorAction]: [M, I],
 ) => {
   return ((...args: Parameters<T>) => {
-    const funcResult = processAction(actions[0], args, func, actions[1])
+    const funcResult = processAction(
+      middlewareAction,
+      args,
+      func,
+      interceptorAction,
+    )
     return handlePromiseFunc(funcResult)
   }) as ReturnType<M> extends Promise<any>
     ? PromiseComp<T>
