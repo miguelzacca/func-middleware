@@ -11,15 +11,6 @@ type PromiseComp<T extends Func> = (
   ...args: Parameters<T>
 ) => Promise<Awaited<ReturnType<T>>>
 
-const handlePromiseFunc = <T extends Func>(
-  funcResult: ReturnType<T>,
-): Promise<ReturnType<T>> | ReturnType<T> => {
-  if (Promise.resolve(funcResult) === funcResult) {
-    return Promise.resolve(funcResult)
-  }
-  return funcResult
-}
-
 const processInterceptor = <T extends Func, A extends InterceptorAction<T>>(
   action: A,
   args: Parameters<T>,
@@ -45,6 +36,13 @@ const processAction = <
 ) => {
   const actionResult = middlewareAction(...args)
 
+  const handlePromiseResult = (result: any) => {
+    if (func.constructor.name === 'AsyncFunction') {
+      return Promise.resolve(result)
+    }
+    return result
+  }
+
   const handleResultAction = (actionResult: ReturnType<M>) => {
     const isCompatibleArgs = (arr: any[]): arr is Parameters<T> => {
       return (
@@ -64,7 +62,7 @@ const processAction = <
         : func(...newArgs)
     }
 
-    return isFalse ? undefined : actionResult
+    return handlePromiseResult(isFalse ? undefined : actionResult)
   }
 
   if (actionResult instanceof Promise) {
@@ -79,8 +77,7 @@ export const middleware = <T extends Func, A extends MiddlewareAction<T>>(
   action: A,
 ) => {
   return ((...args: Parameters<T>) => {
-    const funcResult = processAction(action, args, func)
-    return handlePromiseFunc(funcResult)
+    return processAction(action, args, func)
   }) as ReturnType<A> extends Promise<any> ? PromiseComp<T> : T
 }
 
@@ -89,8 +86,7 @@ export const interceptor = <T extends Func, A extends InterceptorAction<T>>(
   action: A,
 ) => {
   return ((...args: Parameters<T>) => {
-    const funcResult = processInterceptor(action, args, func)
-    return handlePromiseFunc(funcResult)
+    return processInterceptor(action, args, func)
   }) as ReturnType<A> extends Promise<any> ? PromiseComp<T> : T
 }
 
@@ -103,13 +99,7 @@ export const capsule = <
   [middlewareAction, interceptorAction]: [M, I],
 ) => {
   return ((...args: Parameters<T>) => {
-    const funcResult = processAction(
-      middlewareAction,
-      args,
-      func,
-      interceptorAction,
-    )
-    return handlePromiseFunc(funcResult)
+    return processAction(middlewareAction, args, func, interceptorAction)
   }) as ReturnType<M> extends Promise<any>
     ? PromiseComp<T>
     : ReturnType<I> extends Promise<any>
