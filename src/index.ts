@@ -11,26 +11,31 @@ type PromiseComp<T extends Func> = (
   ...args: Parameters<T>
 ) => Promise<Awaited<ReturnType<T>>>
 
+const isAsyncFunction = <T extends Func>(func: T) => {
+  return func.constructor.name === 'AsyncFunction'
+}
+
+const isPromiseInstance = <T>(value: T) => value instanceof Promise
+
+const handlePromise = <T>(result: T, isAsync: boolean) => {
+  return isAsync ? Promise.resolve(result) : result
+}
+
 const processInterceptor = <T extends Func, A extends InterceptorAction<T>>(
   action: A,
   args: Parameters<T>,
   func: T,
 ) => {
-  const handlePromiseFunc = (result: any) => {
-    if (funcResult instanceof Promise) {
-      return Promise.resolve(result)
-    }
-    return result
-  }
   const funcResult = func(...args)
   const actionResult = action(funcResult, ...args)
 
-  const result =
-    actionResult instanceof Promise
-      ? actionResult.then((res) => res ?? funcResult)
-      : actionResult ?? funcResult
+  const decideResult = <T>(actionResult: T) => actionResult ?? funcResult
 
-  return handlePromiseFunc(result)
+  const result = isPromiseInstance(actionResult)
+    ? actionResult.then(decideResult)
+    : decideResult(actionResult)
+
+  return handlePromise(result, isPromiseInstance(funcResult))
 }
 
 const processAction = <
@@ -45,18 +50,11 @@ const processAction = <
 ) => {
   const actionResult = middlewareAction(...args)
 
-  const handlePromiseResult = (result: any) => {
-    if (func.constructor.name === 'AsyncFunction') {
-      return Promise.resolve(result)
-    }
-    return result
-  }
-
   const handleResultAction = (actionResult: ReturnType<M>) => {
-    const isCompatibleArgs = (arr: any[]): arr is Parameters<T> => {
+    const isCompatibleArgs = (array: any[]): array is Parameters<T> => {
       return (
-        arr.length === func.length &&
-        arr.every((arg, i) => typeof arg === typeof args[i])
+        array.length === func.length &&
+        array.every((arg, i) => typeof arg === typeof args[i])
       )
     }
 
@@ -66,18 +64,19 @@ const processAction = <
     if (!isFalse && (isArgs || !actionResult)) {
       const newArgs = isArgs ? actionResult : args
 
-      return interceptorAction
-        ? processInterceptor(interceptorAction, newArgs, func)
-        : func(...newArgs)
+      if (interceptorAction) {
+        return processInterceptor(interceptorAction, newArgs, func)
+      }
+      return func(...newArgs)
     }
 
-    return handlePromiseResult(isFalse ? undefined : actionResult)
+    const result = isFalse ? undefined : actionResult
+    return handlePromise(result, isAsyncFunction(func))
   }
 
-  if (actionResult instanceof Promise) {
+  if (isPromiseInstance(actionResult)) {
     return actionResult.then(handleResultAction)
   }
-
   return handleResultAction(actionResult)
 }
 
