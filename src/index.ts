@@ -1,11 +1,16 @@
 type Func = (...args: any[]) => any
 
-type MiddlewareAction<T extends Func> = (...args: Parameters<T>) => any
+type MiddlewareAction<T extends Func = Func> = (...args: Parameters<T>) => any
 
-type InterceptorAction<T extends Func> = (
+type InterceptorAction<T extends Func = Func> = (
   result: Awaited<ReturnType<T>>,
   ...args: Parameters<T>
 ) => any
+
+type Actions<T extends Func = Func> = [
+  MiddlewareAction<T>,
+  InterceptorAction<T>,
+]
 
 type PromiseComp<T extends Func> = (
   ...args: Parameters<T>
@@ -80,7 +85,7 @@ const processAction = <
   return handleResultAction(actionResult)
 }
 
-export const middleware = <T extends Func, A extends MiddlewareAction<T>>(
+const middleware = <T extends Func, A extends MiddlewareAction<T>>(
   func: T,
   action: A,
 ) => {
@@ -89,7 +94,7 @@ export const middleware = <T extends Func, A extends MiddlewareAction<T>>(
   }) as ReturnType<A> extends Promise<any> ? PromiseComp<T> : T
 }
 
-export const interceptor = <T extends Func, A extends InterceptorAction<T>>(
+const interceptor = <T extends Func, A extends InterceptorAction<T>>(
   func: T,
   action: A,
 ) => {
@@ -98,13 +103,13 @@ export const interceptor = <T extends Func, A extends InterceptorAction<T>>(
   }) as ReturnType<A> extends Promise<any> ? PromiseComp<T> : T
 }
 
-export const capsule = <
+const capsule = <
   T extends Func,
   M extends MiddlewareAction<T>,
   I extends InterceptorAction<T>,
 >(
   func: T,
-  [middlewareAction, interceptorAction]: [M, I],
+  [middlewareAction, interceptorAction]: Actions<T>,
 ) => {
   return ((...args: Parameters<T>) => {
     return processAction(middlewareAction, args, func, interceptorAction)
@@ -114,3 +119,7 @@ export const capsule = <
     ? PromiseComp<T>
     : T
 }
+
+export { middleware, interceptor, capsule }
+
+export { MiddlewareAction, InterceptorAction, Actions }
